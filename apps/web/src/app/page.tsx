@@ -1,7 +1,7 @@
 async function getApiHealth(): Promise<string> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'}/health`,
+      `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3010'}/health`,
       { cache: 'no-store' },
     );
     const data = (await res.json()) as { status: string };
