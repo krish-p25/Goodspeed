@@ -1,0 +1,30 @@
+{
+  "name": "@kb/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\""
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "dotenv": "^16.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "@kb/types": "*",
+    "@kb/config": "*"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.0.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.4.0"
+  }
+}
