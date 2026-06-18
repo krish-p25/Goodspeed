@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "turbo": "latest"
+  },
+  "dependencies": {
+    "supabase": "^2.107.0"
   }
 }
