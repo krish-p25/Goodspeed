@@ -1,0 +1,9 @@
+{
+  "name": "@kb/config",
+  "version": "0.0.1",
+  "private": false,
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint.config.js": "./eslint.config.js"
+  }
+}
