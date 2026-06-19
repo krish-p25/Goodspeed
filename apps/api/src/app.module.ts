@@ -6,6 +6,7 @@ import { SupabaseModule } from './supabase/supabase.module'
 import { AuthModule } from './auth/auth.module'
 import { DocumentsModule } from './documents/documents.module'
 import { AiModule } from './ai/ai.module'
+import { RagModule } from './rag/rag.module'
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AiModule } from './ai/ai.module'
     AuthModule,
     DocumentsModule,
     AiModule,
+    RagModule,
   ],
   controllers: [AppController],
   providers: [AppService],
