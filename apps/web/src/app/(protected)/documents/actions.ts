@@ -34,3 +34,16 @@ export async function deleteDocument(id: string) {
   })
   revalidatePath('/documents')
 }
+
+export async function deleteDocuments(ids: string[]) {
+  const token = await getToken()
+  await Promise.all(
+    ids.map((id) =>
+      fetch(`${API_URL}/documents/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    )
+  )
+  revalidatePath('/documents')
+}

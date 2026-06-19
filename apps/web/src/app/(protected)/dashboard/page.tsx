@@ -12,20 +12,22 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border bg-background px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border bg-background px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">{data.claims.email as string}</p>
+          <p className="text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-none">
+            {data.claims.email as string}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link href="/documents" className={buttonVariants({ variant: 'default' })}>
             <FileText className="size-4" />
-            My Documents
+            <span className="hidden sm:inline">My Documents</span>
           </Link>
           <form action={signOut}>
             <Button type="submit" variant="outline">
               <LogOut className="size-4" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </form>
         </div>

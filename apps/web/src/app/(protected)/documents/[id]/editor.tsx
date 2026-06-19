@@ -12,7 +12,7 @@ import type { Document as KBDocument } from '@kb/types'
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
-const AUTOSAVE_DELAY = 3000
+const AUTOSAVE_DELAY = 2000
 
 async function getToken(): Promise<string> {
   const supabase = createClient()
@@ -71,7 +71,7 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
     }
   }, [document.id, router])
 
-  // Auto-save: debounce 3 s after last keystroke
+  // Auto-save: debounce 2 s after last keystroke
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
@@ -97,22 +97,24 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Sticky header with breadcrumb and save controls */}
-      <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-3 flex items-center justify-between gap-4">
-        <nav className="flex items-center gap-1.5 text-sm min-w-0">
+      <header className="sticky top-0 z-10 border-b border-border bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <nav className="flex items-center gap-1 sm:gap-1.5 text-sm min-w-0">
           <Link
             href="/dashboard"
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            aria-label="Dashboard"
           >
             <LayoutDashboard className="size-4" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </Link>
           <span className="text-muted-foreground">/</span>
           <Link
             href="/documents"
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            aria-label="Documents"
           >
             <FolderOpen className="size-4" />
-            Documents
+            <span className="hidden sm:inline">Documents</span>
           </Link>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium text-foreground truncate">
@@ -120,18 +122,24 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
           </span>
         </nav>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Autosave indicator — always visible on sm+ */}
+          <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-md px-2 py-1 select-none">
+            <span className="size-1.5 rounded-full bg-green-500 shrink-0" />
+            Autosave: On
+          </span>
+
           {status === 'pending' && (
-            <span className="text-xs text-muted-foreground">Unsaved changes</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">Unsaved changes</span>
           )}
           {isSaving && (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
-              Saving…
+              <span className="hidden sm:inline">Saving…</span>
             </span>
           )}
           {status === 'saved' && (
-            <span className="text-xs text-green-600">Saved</span>
+            <span className="text-xs text-green-600 hidden sm:inline">Saved</span>
           )}
           {status === 'error' && (
             <span className="text-xs text-destructive">{saveError}</span>
@@ -148,7 +156,7 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
       </header>
 
       {/* Document body */}
-      <div className="flex-1 flex flex-col gap-4 px-8 py-6 max-w-4xl mx-auto w-full">
+      <div className="flex-1 flex flex-col gap-4 px-4 sm:px-8 py-4 sm:py-6 max-w-4xl mx-auto w-full">
         {/* Timestamps */}
         <div className="flex gap-6 text-xs text-muted-foreground">
           <span>Created: {new Date(document.created_at).toLocaleString()}</span>

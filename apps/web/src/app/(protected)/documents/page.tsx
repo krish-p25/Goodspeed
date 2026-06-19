@@ -16,22 +16,22 @@ export default async function DocumentsPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border bg-background px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border bg-background px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">My Documents</h1>
           <p className="text-sm text-muted-foreground">
             {documents.length} document{documents.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link href="/dashboard" className={buttonVariants({ variant: 'outline' })}>
             <LayoutDashboard className="size-4" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </Link>
           <NewDocumentButton />
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-3 sm:p-6">
         <DocumentsTable documents={documents} />
       </main>
     </div>
