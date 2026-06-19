@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { SupabaseService } from '../supabase/supabase.service'
+import { RagService } from '../rag/rag.service'
 import { CreateDocumentDto } from './dto/create-document.dto'
 import { UpdateDocumentDto } from './dto/update-document.dto'
 
 @Injectable()
 export class DocumentsService {
-  constructor(private supabase: SupabaseService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private rag: RagService,
+  ) {}
 
   async findAll(userId: string, accessToken: string) {
     const client = this.supabase.getUserClient(accessToken)
@@ -46,6 +50,11 @@ export class DocumentsService {
       .single()
 
     if (error || !data) throw new Error(error?.message ?? 'Failed to create document')
+
+    // Process embeddings after successful insert.
+    // If content is empty (stub document), processDocument returns early.
+    await this.rag.processDocument(data.id, data.content, userId)
+
     return data
   }
 
@@ -56,6 +65,15 @@ export class DocumentsService {
     accessToken: string,
   ) {
     const client = this.supabase.getUserClient(accessToken)
+
+    // Fetch current content to diff before re-embedding
+    const { data: existing } = await client
+      .from('documents')
+      .select('content')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single()
+
     const { data, error } = await client
       .from('documents')
       .update({
@@ -69,10 +87,21 @@ export class DocumentsService {
       .single()
 
     if (error || !data) throw new NotFoundException('Document not found or update failed')
+
+    // Only re-embed if content actually changed — avoids unnecessary API calls
+    const contentChanged =
+      dto.content !== undefined && dto.content !== existing?.content
+
+    if (contentChanged) {
+      await this.rag.processDocument(id, data.content, userId)
+    }
+
     return data
   }
 
   async remove(id: string, userId: string, accessToken: string) {
+    await this.rag.deleteDocumentChunks(id, userId)
+
     const client = this.supabase.getUserClient(accessToken)
     const { error } = await client
       .from('documents')
