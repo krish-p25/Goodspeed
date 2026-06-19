@@ -1,25 +1,47 @@
 {
-  "_comment": "Copy relevant block into ai.config.json to switch providers. The 'provider' field inside each chat/embedding block determines which API key env var is used (see AiConfigService.resolveApiKey).",
+  "_comment": "Copy the relevant block into ai.config.json to switch providers. No restart needed after saving.",
+
+  "mock": {
+    "chat": { "provider": "mock", "baseUrl": "", "model": "" },
+    "embedding": { "provider": "mock", "baseUrl": "", "model": "" }
+  },
 
   "openai": {
-    "provider": "openai",
-    "chat": { "provider": "openai", "baseUrl": "https://api.openai.com/v1", "model": "gpt-4o-mini" },
-    "embedding": { "provider": "openai", "baseUrl": "https://api.openai.com/v1", "model": "text-embedding-3-small" }
+    "chat": {
+      "provider": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "gpt-4o-mini"
+    },
+    "embedding": {
+      "provider": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "text-embedding-3-small"
+    }
   },
 
   "groq_chat_openai_embed": {
-    "provider": "openai",
-    "chat": { "provider": "groq", "baseUrl": "https://api.groq.com/openai/v1", "model": "llama-3.1-8b-instant" },
-    "embedding": { "provider": "openai", "baseUrl": "https://api.openai.com/v1", "model": "text-embedding-3-small" }
+    "chat": {
+      "provider": "groq",
+      "baseUrl": "https://api.groq.com/openai/v1",
+      "model": "llama-3.1-8b-instant"
+    },
+    "embedding": {
+      "provider": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "model": "text-embedding-3-small"
+    }
   },
 
   "ollama_local": {
-    "provider": "openai",
-    "chat": { "provider": "ollama", "baseUrl": "http://localhost:11434/v1", "model": "llama3.2" },
-    "embedding": { "provider": "ollama", "baseUrl": "http://localhost:11434/v1", "model": "nomic-embed-text" }
-  },
-
-  "mock": {
-    "provider": "mock"
+    "chat": {
+      "provider": "ollama",
+      "baseUrl": "http://localhost:11434/v1",
+      "model": "llama3.2"
+    },
+    "embedding": {
+      "provider": "ollama",
+      "baseUrl": "http://localhost:11434/v1",
+      "model": "nomic-embed-text"
+    }
   }
 }

@@ -6,10 +6,15 @@ import type { LLMProvider } from './llm-provider.interface'
 import { OpenAICompatibleProvider } from './providers/openai-compatible.provider'
 import { MockProvider } from './providers/mock.provider'
 
+interface ProviderBlock {
+  provider: string
+  baseUrl: string
+  model: string
+}
+
 interface AiConfig {
-  provider: 'openai' | 'mock'
-  chat?: { provider?: string; baseUrl: string; model: string }
-  embedding?: { provider?: string; baseUrl: string; model: string }
+  chat: ProviderBlock
+  embedding: ProviderBlock
 }
 
 @Injectable()
@@ -30,19 +35,19 @@ export class AiConfigService {
     const raw = fs.readFileSync(this.configPath, 'utf-8')
     const aiConfig: AiConfig = JSON.parse(raw)
 
-    if (aiConfig.provider === 'mock') {
+    if (aiConfig.chat.provider === 'mock') {
       return new MockProvider()
     }
 
     // OpenAI-compatible: works with OpenAI, Groq, Together AI,
     // OpenRouter, Ollama — any provider following the Chat Completions spec.
     return new OpenAICompatibleProvider({
-      chatBaseUrl: aiConfig.chat?.baseUrl ?? 'https://api.openai.com/v1',
-      chatApiKey: this.resolveApiKey(aiConfig.chat?.provider ?? 'openai'),
-      chatModel: aiConfig.chat?.model ?? 'gpt-4o-mini',
-      embedBaseUrl: aiConfig.embedding?.baseUrl ?? 'https://api.openai.com/v1',
-      embedApiKey: this.resolveApiKey(aiConfig.embedding?.provider ?? 'openai'),
-      embedModel: aiConfig.embedding?.model ?? 'text-embedding-3-small',
+      chatBaseUrl: aiConfig.chat.baseUrl,
+      chatApiKey: this.resolveApiKey(aiConfig.chat.provider),
+      chatModel: aiConfig.chat.model,
+      embedBaseUrl: aiConfig.embedding.baseUrl,
+      embedApiKey: this.resolveApiKey(aiConfig.embedding.provider),
+      embedModel: aiConfig.embedding.model,
     })
   }
 

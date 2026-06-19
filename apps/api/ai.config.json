@@ -1,14 +1,13 @@
 {
-  "_comment": "Provider behaviour config. Change and save — takes effect on next request, no restart needed. API keys stay in .env and still require a restart when changed.",
-  "provider": "mock",
+  "_comment": "Provider behaviour config. Change and save — takes effect on next request, no restart needed. API keys stay in .env and require a restart when changed.",
   "chat": {
-    "provider": "openai",
-    "baseUrl": "https://api.openai.com/v1",
-    "model": "gpt-4o-mini"
+    "provider": "mock",
+    "baseUrl": "",
+    "model": ""
   },
   "embedding": {
-    "provider": "openai",
-    "baseUrl": "https://api.openai.com/v1",
-    "model": "text-embedding-3-small"
+    "provider": "mock",
+    "baseUrl": "",
+    "model": ""
   }
 }
