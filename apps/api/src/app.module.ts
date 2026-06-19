@@ -5,6 +5,7 @@ import { AppService } from './app.service'
 import { SupabaseModule } from './supabase/supabase.module'
 import { AuthModule } from './auth/auth.module'
 import { DocumentsModule } from './documents/documents.module'
+import { AiModule } from './ai/ai.module'
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { DocumentsModule } from './documents/documents.module'
     SupabaseModule,
     AuthModule,
     DocumentsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
