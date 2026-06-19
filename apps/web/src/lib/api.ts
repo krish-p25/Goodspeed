@@ -1,0 +1,58 @@
+import { createClient } from '@/lib/supabase/server'
+import type { Document as KBDocument } from '@kb/types'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+
+async function getAccessToken(): Promise<string> {
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+  if (!token) throw new Error('Not authenticated')
+  return token
+}
+
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = await getAccessToken()
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`API error ${res.status}: ${body}`)
+  }
+  return res.json()
+}
+
+export const documentsApi = {
+  list: () =>
+    apiFetch<KBDocument[]>('/documents'),
+
+  get: (id: string) =>
+    apiFetch<KBDocument>(`/documents/${id}`),
+
+  create: (body: { title: string; content: string; tags?: string[] }) =>
+    apiFetch<KBDocument>('/documents', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  update: (id: string, body: { title?: string; content?: string; tags?: string[] }) =>
+    apiFetch<KBDocument>(`/documents/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+
+  delete: (id: string) =>
+    apiFetch<{ success: boolean }>(`/documents/${id}`, {
+      method: 'DELETE',
+    }),
+}
