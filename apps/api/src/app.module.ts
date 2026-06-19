@@ -4,12 +4,14 @@ import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { SupabaseModule } from './supabase/supabase.module'
 import { AuthModule } from './auth/auth.module'
+import { DocumentsModule } from './documents/documents.module'
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '../../.env' }),
     SupabaseModule,
     AuthModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
