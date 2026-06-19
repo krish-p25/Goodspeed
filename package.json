@@ -16,6 +16,7 @@
     "turbo": "latest"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "supabase": "^2.107.0"
   }
 }
