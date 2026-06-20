@@ -1,5 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Document as KBDocument } from '@kb/types'
+import type {
+  Document as KBDocument,
+  ChatResponse,
+  Conversation,
+  Message,
+} from '@kb/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -56,3 +61,18 @@ export const documentsApi = {
       method: 'DELETE',
     }),
 }
+
+export const chatApi = {
+  send: (body: { question: string; conversationId?: string }) =>
+    apiFetch<ChatResponse>('/chat', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  listConversations: () =>
+    apiFetch<Conversation[]>('/chat/conversations'),
+
+  getMessages: (conversationId: string) =>
+    apiFetch<Message[]>(`/chat/conversations/${conversationId}/messages`),
+}
+
