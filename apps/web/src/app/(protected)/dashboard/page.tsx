@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { signOut } from './actions'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
-import { FileText, LogOut, FilePlus } from 'lucide-react'
+import { FileText, LogOut, MessageSquare } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -22,7 +22,11 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href="/documents" className={buttonVariants({ variant: 'default' })}>
+          <Link href="/chat" className={buttonVariants({ variant: 'default' })}>
+            <MessageSquare className="size-4" />
+            <span className="hidden sm:inline">Chat</span>
+          </Link>
+          <Link href="/documents" className={buttonVariants({ variant: 'outline' })}>
             <FileText className="size-4" />
             <span className="hidden sm:inline">My Documents</span>
           </Link>
@@ -56,13 +60,13 @@ export default async function DashboardPage() {
           </Link>
 
           <Link
-            href="/documents"
+            href="/chat"
             className="rounded-lg border border-border bg-background p-5 hover:bg-muted/40 transition-colors space-y-2"
           >
-            <FilePlus className="size-6 text-muted-foreground" />
-            <p className="font-medium text-sm">New Document</p>
+            <MessageSquare className="size-6 text-muted-foreground" />
+            <p className="font-medium text-sm">Chat</p>
             <p className="text-xs text-muted-foreground">
-              Add new content to your knowledge base.
+              Ask questions and get answers grounded in your documents.
             </p>
           </Link>
         </div>
