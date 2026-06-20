@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { AiConfigService } from '../ai/ai-config.service'
 
 export interface TextChunk {
   content: string
@@ -8,8 +9,7 @@ export interface TextChunk {
 
 @Injectable()
 export class ChunkingService {
-  private readonly targetTokens = 600
-  private readonly overlapFraction = 0.12
+  constructor(private readonly aiConfig: AiConfigService) {}
 
   /**
    * Split document content into overlapping chunks.
@@ -19,20 +19,24 @@ export class ChunkingService {
    *
    * Token count is approximated as word count * 1.3 — accurate enough for
    * chunking decisions without a tokeniser dependency.
+   *
+   * targetTokens and overlapFraction are read from ai.config.json on every
+   * call — change and save the file to take effect on the next document.
    */
   chunk(content: string): TextChunk[] {
     if (!content.trim()) return []
 
-    const segments = this.splitIntoSegments(content)
+    const { targetTokens, overlapFraction } = this.aiConfig.getChunkingConfig()
+    const segments = this.splitIntoSegments(content, targetTokens)
     const chunks: TextChunk[] = []
     let current: string[] = []
     let currentTokens = 0
-    const overlapTokens = Math.floor(this.targetTokens * this.overlapFraction)
+    const overlapTokens = Math.floor(targetTokens * overlapFraction)
 
     for (const segment of segments) {
       const segmentTokens = this.estimateTokens(segment)
 
-      if (currentTokens + segmentTokens > this.targetTokens && current.length > 0) {
+      if (currentTokens + segmentTokens > targetTokens && current.length > 0) {
         const chunkContent = current.join(' ').trim()
         if (chunkContent) {
           chunks.push({ content: chunkContent, index: chunks.length, tokenCount: currentTokens })
@@ -70,13 +74,13 @@ export class ChunkingService {
    * Split content into segments by trying structural boundaries in order:
    * double newlines (paragraphs), single newlines, sentence endings.
    */
-  private splitIntoSegments(content: string): string[] {
+  private splitIntoSegments(content: string, targetTokens: number): string[] {
     return content
       .split(/\n\n+/)
       .flatMap((para) => {
-        if (this.estimateTokens(para) <= this.targetTokens) return [para]
+        if (this.estimateTokens(para) <= targetTokens) return [para]
         return para.split(/\n/).flatMap((line) => {
-          if (this.estimateTokens(line) <= this.targetTokens) return [line]
+          if (this.estimateTokens(line) <= targetTokens) return [line]
           return line.split(/(?<=[.!?])\s+/)
         })
       })
