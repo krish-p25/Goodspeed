@@ -66,6 +66,56 @@ export interface CitationEvent {
 export type StreamEvent = TextEvent | CitationEvent
 
 // ---------------------------------------------------------------------------
+// Conversation and message types
+// ---------------------------------------------------------------------------
+
+export interface Conversation {
+  id: string
+  user_id: string
+  title: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Message {
+  id: string
+  conversation_id: string
+  user_id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export interface MessageSource {
+  id: string
+  message_id: string
+  chunk_id: string | null
+  document_id: string | null
+  sentence_text: string
+  char_start: number | null
+  char_end: number | null
+  position: number
+}
+
+export interface ChatRequest {
+  question: string
+  conversationId?: string
+}
+
+export interface ChatResponse {
+  conversationId: string
+  messageId: string
+  answer: string
+  sources: DocumentSource[]
+  noContext: boolean
+}
+
+export interface DocumentSource {
+  documentId: string
+  documentTitle: string
+}
+
+// ---------------------------------------------------------------------------
 // Retrieval types
 // ---------------------------------------------------------------------------
 
