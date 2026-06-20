@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module'
 import { DocumentsModule } from './documents/documents.module'
 import { AiModule } from './ai/ai.module'
 import { RagModule } from './rag/rag.module'
+import { ChatModule } from './chat/chat.module'
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RagModule } from './rag/rag.module'
     DocumentsModule,
     AiModule,
     RagModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
