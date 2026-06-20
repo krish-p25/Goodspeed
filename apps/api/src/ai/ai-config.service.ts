@@ -12,9 +12,15 @@ interface ProviderBlock {
   model: string
 }
 
+export interface ChunkingConfig {
+  targetTokens: number
+  overlapFraction: number
+}
+
 interface AiConfig {
   chat: ProviderBlock
   embedding: ProviderBlock
+  chunking?: Partial<ChunkingConfig>
 }
 
 @Injectable()
@@ -49,6 +55,21 @@ export class AiConfigService {
       embedApiKey: this.resolveApiKey(aiConfig.embedding.provider),
       embedModel: aiConfig.embedding.model,
     })
+  }
+
+  /**
+   * Returns the current chunking config from ai.config.json.
+   * Re-reads the file on every call — changes take effect on the next
+   * document processed without restarting the app.
+   * Falls back to safe defaults if the chunking block is absent.
+   */
+  getChunkingConfig(): ChunkingConfig {
+    const raw = fs.readFileSync(this.configPath, 'utf-8')
+    const aiConfig: AiConfig = JSON.parse(raw)
+    return {
+      targetTokens: aiConfig.chunking?.targetTokens ?? 100,
+      overlapFraction: aiConfig.chunking?.overlapFraction ?? 0.12,
+    }
   }
 
   /**
