@@ -1,6 +1,12 @@
 {
   "_comment": "Copy the relevant block into ai.config.json to switch providers. No restart needed after saving.",
 
+  "chunking": {
+    "_comment": "Controls how documents are split before embedding. Change and save — takes effect on the next document processed.",
+    "targetTokens": 100,
+    "overlapFraction": 0.12
+  },
+
   "mock": {
     "chat": { "provider": "mock", "baseUrl": "", "model": "" },
     "embedding": { "provider": "mock", "baseUrl": "", "model": "" }
