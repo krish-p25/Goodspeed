@@ -64,3 +64,38 @@ export interface CitationEvent {
 }
 
 export type StreamEvent = TextEvent | CitationEvent
+
+// ---------------------------------------------------------------------------
+// Retrieval types
+// ---------------------------------------------------------------------------
+
+/**
+ * A single sentence within a retrieved chunk, with a stable ID for
+ * citation purposes and character offsets into the source document
+ * for click-through highlighting.
+ */
+export interface CitableSentence {
+  id: string           // e.g. "c1_s3" — chunk position 1, sentence 3
+  chunkId: string
+  documentId: string
+  documentTitle: string
+  text: string
+  charStart: number    // character offset into chunk.content
+  charEnd: number
+}
+
+/**
+ * A retrieved chunk with its similarity score and sentence-level citation
+ * data pre-computed at retrieval time.
+ */
+export interface RetrievedChunk {
+  id: string
+  documentId: string
+  documentTitle: string
+  content: string
+  chunkIndex: number
+  similarity: number
+  // Sentence map: id -> CitableSentence
+  // Populated at retrieval time for use by the citation resolver in Phase 9
+  sentences: Map<string, CitableSentence>
+}
