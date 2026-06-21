@@ -116,6 +116,58 @@ export interface DocumentSource {
 }
 
 // ---------------------------------------------------------------------------
+// SSE streaming event types
+// These are the typed events emitted by POST /chat/stream
+// ---------------------------------------------------------------------------
+
+export type SseEventType = 'token' | 'sources' | 'done' | 'error'
+
+export interface TokenEvent {
+  type: 'token'
+  delta: string // the new token text
+}
+
+export interface SourcesEvent {
+  type: 'sources'
+  sources: DocumentSource[]
+  conversationId: string
+  messageId: string
+}
+
+export interface DoneEvent {
+  type: 'done'
+}
+
+export interface ErrorEvent {
+  type: 'error'
+  message: string
+}
+
+// Citation event emitted by the SSE stream when a valid citation marker
+// is resolved. Carries the resolved sentence data for frontend rendering.
+export interface CitationStreamEvent {
+  type: 'citation'
+  ids: string[]           // the validated sentence IDs e.g. ["c0_s1", "c1_s0"]
+  sentences: Array<{
+    id: string
+    documentTitle: string
+    text: string            // the exact cited sentence
+    charStart: number
+    charEnd: number
+  }>
+  // The original marker text e.g. "[c0_s1]" — used by the frontend to
+  // replace the marker with a highlighted span.
+  markerText: string
+}
+
+export type ChatSseEvent =
+  | TokenEvent
+  | CitationStreamEvent
+  | SourcesEvent
+  | DoneEvent
+  | ErrorEvent
+
+// ---------------------------------------------------------------------------
 // Retrieval types
 // ---------------------------------------------------------------------------
 

@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Body, Param, Request, UseGuards } from '@nestjs/common'
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Query,
+  Request,
+  UseGuards,
+  Sse,
+} from '@nestjs/common'
+import { Observable } from 'rxjs'
 import { AuthGuard } from '../auth/auth.guard'
 import { ChatService } from './chat.service'
 import { ConversationService } from './conversation.service'
@@ -22,6 +33,20 @@ export class ChatController {
       question: dto.question,
       userId: req.user.id,
       conversationId: dto.conversationId,
+      accessToken: req.user.accessToken,
+    })
+  }
+
+  @Sse('stream')
+  chatStream(
+    @Query('question') question: string,
+    @Query('conversationId') conversationId: string | undefined,
+    @Request() req: any,
+  ): Observable<{ data: string }> {
+    return this.chatService.chatStream({
+      question,
+      userId: req.user.id,
+      conversationId,
       accessToken: req.user.accessToken,
     })
   }
