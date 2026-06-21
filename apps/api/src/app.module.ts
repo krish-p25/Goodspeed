@@ -8,6 +8,7 @@ import { DocumentsModule } from './documents/documents.module'
 import { AiModule } from './ai/ai.module'
 import { RagModule } from './rag/rag.module'
 import { ChatModule } from './chat/chat.module'
+import { SettingsModule } from './settings/settings.module'
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChatModule } from './chat/chat.module'
     AiModule,
     RagModule,
     ChatModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

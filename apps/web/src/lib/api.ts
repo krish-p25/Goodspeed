@@ -4,6 +4,7 @@ import type {
   ChatResponse,
   Conversation,
   MessageWithCitations,
+  AiConfigSettings,
 } from '@kb/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -76,5 +77,15 @@ export const chatApi = {
     apiFetch<MessageWithCitations[]>(
       `/chat/conversations/${conversationId}/messages`,
     ),
+}
+
+export const settingsApi = {
+  get: () => apiFetch<AiConfigSettings>('/settings'),
+
+  update: (settings: AiConfigSettings) =>
+    apiFetch<{ success: boolean; message: string }>('/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(settings),
+    }),
 }
 

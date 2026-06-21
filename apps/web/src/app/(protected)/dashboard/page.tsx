@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { signOut } from './actions'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
-import { FileText, LogOut, MessageSquare } from 'lucide-react'
+import { FileText, LogOut, MessageSquare, Settings } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -29,6 +29,10 @@ export default async function DashboardPage() {
           <Link href="/documents" className={buttonVariants({ variant: 'outline' })}>
             <FileText className="size-4" />
             <span className="hidden sm:inline">My Documents</span>
+          </Link>
+          <Link href="/settings" className={buttonVariants({ variant: 'outline' })}>
+            <Settings className="size-4" />
+            <span className="hidden sm:inline">Settings</span>
           </Link>
           <form action={signOut}>
             <Button type="submit" variant="outline">

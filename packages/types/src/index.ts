@@ -207,6 +207,27 @@ export interface CitableSentence {
   charEnd: number
 }
 
+// ---------------------------------------------------------------------------
+// Settings types
+// ---------------------------------------------------------------------------
+
+export type ProviderName = 'openai' | 'groq' | 'together' | 'ollama' | 'mock'
+
+export interface ProviderBlock {
+  provider: ProviderName
+  baseUrl: string
+  model: string
+}
+
+export interface AiConfigSettings {
+  chat: ProviderBlock
+  embedding: ProviderBlock
+  chunking: {
+    targetTokens: number
+    overlapFraction: number
+  }
+}
+
 /**
  * A retrieved chunk with its similarity score and sentence-level citation
  * data pre-computed at retrieval time.
