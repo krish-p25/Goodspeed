@@ -9,6 +9,7 @@ import { AiModule } from './ai/ai.module'
 import { RagModule } from './rag/rag.module'
 import { ChatModule } from './chat/chat.module'
 import { SettingsModule } from './settings/settings.module'
+import { UsageModule } from './usage/usage.module'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SettingsModule } from './settings/settings.module'
     RagModule,
     ChatModule,
     SettingsModule,
+    UsageModule,
   ],
   controllers: [AppController],
   providers: [AppService],

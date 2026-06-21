@@ -243,3 +243,61 @@ export interface RetrievedChunk {
   // Populated at retrieval time for use by the citation resolver in Phase 9
   sentences: Map<string, CitableSentence>
 }
+
+// ---------------------------------------------------------------------------
+// Token usage types
+// ---------------------------------------------------------------------------
+
+export type TokenUsagePeriod = 'today' | 'week' | 'month'
+export type TokenUsageType = 'chat' | 'embedding'
+
+export interface TokenUsageRow {
+  id: string
+  user_id: string
+  type: TokenUsageType
+  conversation_id: string | null
+  message_id: string | null
+  prompt_tokens: number | null
+  completion_tokens: number | null
+  total_tokens: number
+  model: string | null
+  created_at: string
+}
+
+// One data point in the time-series chart.
+// label: x-axis label (hour "14", day name "Mon", or date "15")
+// chatTokens: cumulative chat tokens up to this point in the period
+// embeddingTokens: cumulative embedding tokens up to this point
+export interface UsageDataPoint {
+  label: string
+  chatTokens: number
+  embeddingTokens: number
+  totalTokens: number
+}
+
+export interface UsageAggregate {
+  chatPromptTokens: number
+  chatCompletionTokens: number
+  chatTotalTokens: number
+  chatCallCount: number
+  embeddingTotalTokens: number
+  embeddingCallCount: number
+  grandTotalTokens: number
+}
+
+export interface ConversationUsage {
+  conversationId: string
+  conversationTitle: string | null
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  messageCount: number
+}
+
+export interface UsageSummary {
+  period: TokenUsagePeriod
+  periodLabel: string           // e.g. "Today", "This week", "June 2026"
+  series: UsageDataPoint[]      // time-series for the line chart
+  aggregate: UsageAggregate
+  byConversation: ConversationUsage[]
+}

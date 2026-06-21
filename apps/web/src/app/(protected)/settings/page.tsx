@@ -289,9 +289,7 @@ function SettingsForm({
               />
               <p className="text-xs text-muted-foreground">
                 Enter any model name supported by the selected provider, e.g.
-                gpt-4.1-mini, gpt-5.4-mini, llama-3.3-70b-versatile. Model names
-                change frequently — check your provider&apos;s documentation for
-                the latest available models.
+                gpt-4.1-mini, gpt-5.4-mini, llama-3.3-70b-versatile.
               </p>
             </div>
           </>
@@ -311,7 +309,7 @@ function SettingsForm({
         <p className="text-xs text-muted-foreground">
           Warning: changing the embedding model may require a database migration
           if the new model produces a different vector dimension than the
-          current 1536. Only change this if you know what you are doing.
+          current 1536.
         </p>
 
         <div className="space-y-2">

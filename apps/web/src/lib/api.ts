@@ -5,6 +5,8 @@ import type {
   Conversation,
   MessageWithCitations,
   AiConfigSettings,
+  UsageSummary,
+  TokenUsagePeriod,
 } from '@kb/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -87,5 +89,10 @@ export const settingsApi = {
       method: 'PATCH',
       body: JSON.stringify(settings),
     }),
+}
+
+export const usageApi = {
+  getSummary: (period: TokenUsagePeriod = 'month') =>
+    apiFetch<UsageSummary>(`/usage/summary?period=${period}`),
 }
 

@@ -1,16 +1,30 @@
 import { Injectable, Inject } from '@nestjs/common'
 import { LLM_PROVIDER, LLMProvider } from '../ai/llm-provider.interface'
 
+export interface EmbedResult {
+  embeddings: number[][]
+  totalTokens: number
+}
+
 @Injectable()
 export class EmbeddingService {
   constructor(
     @Inject(LLM_PROVIDER) private readonly llm: LLMProvider,
   ) {}
 
-  /** Generate embeddings for an array of texts. Returns in input order. */
-  async embedTexts(texts: string[]): Promise<number[][]> {
-    if (texts.length === 0) return []
-    return this.llm.embed(texts)
+  /**
+   * Generate embeddings for an array of texts. Returns in input order,
+   * alongside an estimated token count for the batch.
+   */
+  async embedTexts(texts: string[]): Promise<EmbedResult> {
+    if (texts.length === 0) return { embeddings: [], totalTokens: 0 }
+    const embeddings = await this.llm.embed(texts)
+    // Estimate: ~4 characters per token for English text.
+    // Exact counts require an LLMProvider.embed() interface change — future work.
+    const totalTokens = Math.ceil(
+      texts.reduce((sum, t) => sum + t.length, 0) / 4,
+    )
+    return { embeddings, totalTokens }
   }
 
   /**

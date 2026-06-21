@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { SupabaseService } from '../supabase/supabase.service'
 import { ChunkingService } from './chunking.service'
 import { EmbeddingService } from './embedding.service'
+import { TokenUsageService } from '../usage/token-usage.service'
+import * as fs from 'fs'
+import * as path from 'path'
 
 @Injectable()
 export class RagService {
@@ -9,6 +12,7 @@ export class RagService {
     private readonly supabase: SupabaseService,
     private readonly chunking: ChunkingService,
     private readonly embedding: EmbeddingService,
+    private readonly tokenUsage: TokenUsageService,
   ) {}
 
   /**
@@ -45,7 +49,16 @@ export class RagService {
     if (chunks.length === 0) return
 
     const texts = chunks.map((c) => c.content)
-    const embeddings = await this.embedding.embedTexts(texts)
+    const { embeddings, totalTokens } = await this.embedding.embedTexts(texts)
+
+    // Record embedding token usage — fire and forget, never block the save
+    this.tokenUsage
+      .recordEmbedding({
+        userId,
+        totalTokens,
+        model: this.getCurrentEmbedModel(),
+      })
+      .catch(() => {})
 
     const rows = chunks.map((chunk, i) => ({
       document_id: documentId,
@@ -84,6 +97,23 @@ export class RagService {
 
     if (error) {
       throw new Error(`Failed to delete chunks: ${error.message}`)
+    }
+  }
+
+  /**
+   * Read the currently-configured embedding model from ai.config.json so the
+   * recorded usage row reflects the model actually used. Falls back to
+   * 'unknown' if the file is missing or unreadable.
+   */
+  private getCurrentEmbedModel(): string {
+    try {
+      const raw = fs.readFileSync(
+        path.resolve(process.cwd(), 'ai.config.json'),
+        'utf-8',
+      )
+      return JSON.parse(raw)?.embedding?.model ?? 'unknown'
+    } catch {
+      return 'unknown'
     }
   }
 }

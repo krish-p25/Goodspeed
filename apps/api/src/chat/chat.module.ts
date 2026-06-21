@@ -6,9 +6,10 @@ import { ConversationService } from './conversation.service'
 import { RagModule } from '../rag/rag.module'
 import { AiModule } from '../ai/ai.module'
 import { SupabaseModule } from '../supabase/supabase.module'
+import { UsageModule } from '../usage/usage.module'
 
 @Module({
-  imports: [RagModule, AiModule, SupabaseModule],
+  imports: [RagModule, AiModule, SupabaseModule, UsageModule],
   controllers: [ChatController],
   providers: [ChatService, PromptBuilderService, ConversationService],
   exports: [ChatService, PromptBuilderService],

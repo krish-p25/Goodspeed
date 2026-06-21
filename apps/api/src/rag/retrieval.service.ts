@@ -53,7 +53,8 @@ export class RetrievalService {
     const threshold = params.threshold ?? this.threshold
 
     // Embed the query using the same model as the stored chunks
-    const [queryEmbedding] = await this.embedding.embedTexts([query])
+    const { embeddings } = await this.embedding.embedTexts([query])
+    const [queryEmbedding] = embeddings
 
     // Call match_chunks via rpc() — the only supported path for pgvector
     // similarity queries through supabase-js / PostgREST

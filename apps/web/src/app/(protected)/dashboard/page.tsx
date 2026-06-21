@@ -4,6 +4,7 @@ import { signOut } from './actions'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
 import { FileText, LogOut, MessageSquare, Settings } from 'lucide-react'
+import { UsagePanel } from './usage-panel'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -79,6 +80,8 @@ export default async function DashboardPage() {
             </p>
           </Link>
         </div>
+
+        <UsagePanel />
       </main>
     </div>
   )

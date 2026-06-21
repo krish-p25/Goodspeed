@@ -6,6 +6,9 @@ import { RetrievalService } from '../rag/retrieval.service'
 import { PromptBuilderService } from './prompt-builder.service'
 import { ConversationService } from './conversation.service'
 import { CitationStreamResolver } from './citation-resolver'
+import { TokenUsageService } from '../usage/token-usage.service'
+import * as fs from 'fs'
+import * as path from 'path'
 import type { ChatResponse, ChatSseEvent, CitationStreamEvent } from '@kb/types'
 
 // How many prior messages to load for history-aware retrieval and prompting.
@@ -18,6 +21,7 @@ export class ChatService {
     private readonly retrieval: RetrievalService,
     private readonly promptBuilder: PromptBuilderService,
     private readonly conversation: ConversationService,
+    private readonly tokenUsage: TokenUsageService,
   ) {}
 
   async chat(params: {
@@ -84,6 +88,21 @@ export class ChatService {
       sources,
       retrievedChunks: chunks,
     })
+
+    // Record token usage — fire and forget, never block the response
+    if (result.usage) {
+      this.tokenUsage
+        .recordChat({
+          userId,
+          conversationId: convId,
+          messageId,
+          promptTokens: result.usage.promptTokens,
+          completionTokens: result.usage.completionTokens,
+          totalTokens: result.usage.totalTokens,
+          model: this.getCurrentChatModel(),
+        })
+        .catch(() => {})
+    }
 
     return {
       conversationId: convId,
@@ -266,6 +285,23 @@ export class ChatService {
         resolvedCitations.length > 0 ? resolvedCitations : undefined,
     })
 
+    // Estimate token usage for streaming — exact counts require
+    // stream_options: { include_usage: true } noted as future improvement
+    const estimatedTokens = Math.ceil(
+      fullAnswer.split(/\s+/).filter(Boolean).length * 1.3,
+    )
+    this.tokenUsage
+      .recordChat({
+        userId,
+        conversationId: convId,
+        messageId,
+        promptTokens: 0,
+        completionTokens: estimatedTokens,
+        totalTokens: estimatedTokens,
+        model: this.getCurrentChatModel(),
+      })
+      .catch(() => {})
+
     // Step 7: Emit sources and done
     const sourcesEvent: ChatSseEvent = {
       type: 'sources',
@@ -312,6 +348,23 @@ export class ChatService {
     } catch {
       // Never let the rewrite step take down the chat request.
       return question
+    }
+  }
+
+  /**
+   * Read the currently-configured chat model from ai.config.json so the
+   * recorded usage row reflects the model actually used. Falls back to
+   * 'unknown' if the file is missing or unreadable.
+   */
+  private getCurrentChatModel(): string {
+    try {
+      const raw = fs.readFileSync(
+        path.resolve(process.cwd(), 'ai.config.json'),
+        'utf-8',
+      )
+      return JSON.parse(raw)?.chat?.model ?? 'unknown'
+    } catch {
+      return 'unknown'
     }
   }
 }
