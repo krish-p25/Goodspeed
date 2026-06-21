@@ -75,6 +75,17 @@ export class ConversationService {
     answer: string
     sources: Array<{ documentId: string; documentTitle: string }>
     retrievedChunks: RetrievedChunk[]
+    resolvedCitations?: Array<{
+      ids: string[]
+      sentences: Array<{
+        id: string
+        documentTitle: string
+        text: string
+        charStart: number
+        charEnd: number
+      }>
+      markerText: string
+    }>
   }): Promise<string> {
     const admin = this.supabase.getAdminClient()
 
@@ -100,12 +111,37 @@ export class ConversationService {
 
     if (error || !assistantMsg) throw new Error('Failed to persist assistant message')
 
-    // Persist document-level citations as message_sources
-    // These are the guaranteed citation floor — accurate because they come
-    // from the known retrieved chunks, not parsed from model output.
-    // position tracks citation order within the message for stable footnote
-    // numbering in the UI.
-    if (params.sources.length > 0) {
+    // Persist citations as message_sources.
+    // When span-level citations resolved during streaming, persist them with
+    // their exact sentence text and character offsets. Otherwise fall back to
+    // document-level rows — the guaranteed citation floor.
+    if (params.resolvedCitations && params.resolvedCitations.length > 0) {
+      const sentenceRows = params.resolvedCitations.flatMap(
+        (citation, citationIndex) =>
+          citation.sentences.map((sentence, sentenceIndex) => {
+            // Find the chunk that owns this sentence ID
+            const chunk = params.retrievedChunks.find((c) =>
+              c.sentences.has(sentence.id),
+            )
+            return {
+              message_id: assistantMsg.id,
+              chunk_id: chunk?.id ?? null,
+              document_id: chunk?.documentId ?? null,
+              sentence_text: sentence.text,
+              char_start: sentence.charStart,
+              char_end: sentence.charEnd,
+              position: citationIndex * 10 + sentenceIndex,
+            }
+          }),
+      )
+
+      if (sentenceRows.length > 0) {
+        await admin.from('message_sources').insert(sentenceRows)
+      }
+    } else if (params.sources.length > 0) {
+      // Document-level citations — accurate because they come from the known
+      // retrieved chunks, not parsed from model output. position tracks
+      // citation order within the message for stable numbering in the UI.
       const sourceRows = params.sources.map((source, position) => {
         // Find the first chunk for this document to get its ID
         const chunk = params.retrievedChunks.find(

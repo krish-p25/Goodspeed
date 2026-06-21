@@ -100,7 +100,10 @@ export class PromptBuilderService {
       '- Base your answer solely on the provided context.',
       '- If the context does not contain enough information to answer, say so plainly rather than guessing or drawing on outside knowledge.',
       '- Be concise and direct.',
-      '- When you use information from the context, you may reference the source document by name.',
+      '- When you use information from a specific sentence, cite it by appending its ID in square brackets immediately after the claim, e.g. [c0_s1].',
+      '- Only cite sentence IDs that appear exactly in the context below. Do not invent IDs.',
+      '- A claim may cite multiple sentences: [c0_s1][c1_s0].',
+      '- If no sentence directly supports a claim, do not cite.',
     ].join('\n')
   }
 
