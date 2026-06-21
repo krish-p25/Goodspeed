@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Param,
   Query,
@@ -59,5 +60,10 @@ export class ChatController {
   @Get('conversations/:id/messages')
   getMessages(@Param('id') id: string, @Request() req: any) {
     return this.conversationService.getMessages(id, req.user.id)
+  }
+
+  @Delete('conversations/:id')
+  deleteConversation(@Param('id') id: string, @Request() req: any) {
+    return this.conversationService.deleteConversation(id, req.user.id)
   }
 }

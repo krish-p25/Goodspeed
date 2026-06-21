@@ -3,6 +3,7 @@ import { chatApi } from '@/lib/api'
 import { buttonVariants } from '@/components/ui/button'
 import { MessageSquarePlus, LayoutDashboard, FolderOpen, MessageSquare } from 'lucide-react'
 import type { Conversation } from '@kb/types'
+import { ConversationList } from './conversation-list'
 
 export default async function ChatLayout({
   children,
@@ -51,22 +52,7 @@ export default async function ChatLayout({
             </Link>
           </div>
           <nav className="flex-1 overflow-y-auto px-2 pb-2 space-y-1">
-            {conversations.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-                No conversations yet.
-              </p>
-            ) : (
-              conversations.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/chat/${c.id}`}
-                  className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors truncate"
-                  title={c.title ?? 'Untitled'}
-                >
-                  {c.title ?? 'Untitled conversation'}
-                </Link>
-              ))
-            )}
+            <ConversationList conversations={conversations} />
           </nav>
         </aside>
 

@@ -253,6 +253,26 @@ export class ConversationService {
   }
 
   /**
+   * Delete a conversation owned by the user. Messages and message_sources
+   * are removed automatically via ON DELETE CASCADE. Scoped by user_id so a
+   * user can never delete another user's conversation.
+   */
+  async deleteConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<{ success: boolean }> {
+    const admin = this.supabase.getAdminClient()
+    const { error } = await admin
+      .from('conversations')
+      .delete()
+      .eq('id', conversationId)
+      .eq('user_id', userId)
+
+    if (error) throw new Error(error.message)
+    return { success: true }
+  }
+
+  /**
    * Load, per assistant message, both:
    *   - citations: span-level rows (non-empty sentence_text) grouped back
    *     into their original citations. The write-time position encoding
