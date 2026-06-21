@@ -20,8 +20,10 @@ export default async function ChatLayout({
     <div className="h-screen flex flex-col">
       {/* Top bar */}
       <header className="border-b border-border bg-background px-4 sm:px-6 py-3 flex items-center justify-between gap-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="size-5" />
+        <div className="flex items-center gap-2.5">
+          <span className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <MessageSquare className="size-4" />
+          </span>
           <h1 className="text-lg font-bold">Chat</h1>
         </div>
         <div className="flex items-center gap-2">
@@ -58,7 +60,7 @@ export default async function ChatLayout({
                 <Link
                   key={c.id}
                   href={`/chat/${c.id}`}
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors truncate"
+                  className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors truncate"
                   title={c.title ?? 'Untitled'}
                 >
                   {c.title ?? 'Untitled conversation'}

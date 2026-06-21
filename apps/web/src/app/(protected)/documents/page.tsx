@@ -3,7 +3,7 @@ import { NewDocumentButton } from './new-document-button'
 import { DocumentsTable } from './documents-table'
 import { buttonVariants } from '@/components/ui/button'
 import Link from 'next/link'
-import { LayoutDashboard } from 'lucide-react'
+import { LayoutDashboard, MessageSquare } from 'lucide-react'
 import type { Document as KBDocument } from '@kb/types'
 
 export default async function DocumentsPage() {
@@ -24,6 +24,10 @@ export default async function DocumentsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/chat" className={buttonVariants({ variant: 'default' })}>
+            <MessageSquare className="size-4" />
+            <span className="hidden sm:inline">Chat</span>
+          </Link>
           <Link href="/dashboard" className={buttonVariants({ variant: 'outline' })}>
             <LayoutDashboard className="size-4" />
             <span className="hidden sm:inline">Dashboard</span>

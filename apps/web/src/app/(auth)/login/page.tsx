@@ -1,4 +1,9 @@
+import Link from 'next/link'
+import { Sparkles } from 'lucide-react'
 import { signIn } from './actions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default async function LoginPage({
   searchParams,
@@ -8,45 +13,66 @@ export default async function LoginPage({
   const { error, message } = await searchParams
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+    <main className="relative flex min-h-screen flex-col items-center justify-center p-6 overflow-hidden">
+      {/* Soft brand glow background */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-background to-background" />
+      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 size-[28rem] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+
       <div className="w-full max-w-sm">
-        <h1 className="mb-6 text-2xl font-bold">Sign in</h1>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="mb-3 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+            <Sparkles className="size-6" />
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sign in to your knowledge base
+          </p>
+        </div>
 
-        {error && (
-          <p className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">{error}</p>
-        )}
-        {message && (
-          <p className="mb-4 rounded bg-blue-100 p-3 text-sm text-blue-700">{message}</p>
-        )}
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          {error && (
+            <p className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="mb-4 rounded-lg bg-primary/10 p-3 text-sm text-primary">
+              {message}
+            </p>
+          )}
 
-        <form action={signIn} className="flex flex-col gap-4">
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            className="rounded border px-3 py-2"
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            required
-            className="rounded border px-3 py-2"
-          />
-          <button
-            type="submit"
-            className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
-          >
-            Sign in
-          </button>
-        </form>
+          <form action={signIn} className="flex flex-col gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <Button type="submit" className="mt-1 w-full">
+              Sign in
+            </Button>
+          </form>
+        </div>
 
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           No account?{' '}
-          <a href="/signup" className="underline">
+          <Link href="/signup" className="font-medium text-primary hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </main>

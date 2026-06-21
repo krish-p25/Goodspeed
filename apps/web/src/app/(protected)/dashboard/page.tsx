@@ -40,19 +40,22 @@ export default async function DashboardPage() {
       </header>
 
       <main className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full space-y-6">
-        <div>
-          <h2 className="text-lg font-semibold">Welcome back</h2>
+        <div className="rounded-xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6">
+          <h2 className="text-xl font-semibold">Welcome back</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Your personal AI-powered knowledge base.
+            Your personal AI-powered knowledge base. Save documents, then ask
+            questions and get answers grounded in what you&apos;ve written.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Link
             href="/documents"
-            className="rounded-lg border border-border bg-background p-5 hover:bg-muted/40 transition-colors space-y-2"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all space-y-3"
           >
-            <FileText className="size-6 text-muted-foreground" />
+            <div className="size-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <FileText className="size-5" />
+            </div>
             <p className="font-medium text-sm">My Documents</p>
             <p className="text-xs text-muted-foreground">
               Browse, search, and manage your knowledge base.
@@ -61,9 +64,11 @@ export default async function DashboardPage() {
 
           <Link
             href="/chat"
-            className="rounded-lg border border-border bg-background p-5 hover:bg-muted/40 transition-colors space-y-2"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5 transition-all space-y-3"
           >
-            <MessageSquare className="size-6 text-muted-foreground" />
+            <div className="size-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <MessageSquare className="size-5" />
+            </div>
             <p className="font-medium text-sm">Chat</p>
             <p className="text-xs text-muted-foreground">
               Ask questions and get answers grounded in your documents.
