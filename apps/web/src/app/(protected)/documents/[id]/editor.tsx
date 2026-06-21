@@ -6,7 +6,16 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Loader2, LayoutDashboard, FolderOpen } from 'lucide-react'
+import {
+  Save,
+  Loader2,
+  LayoutDashboard,
+  FolderOpen,
+  FileUp,
+  FileText,
+  Tag,
+  AlertCircle,
+} from 'lucide-react'
 import type { Document as KBDocument } from '@kb/types'
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
@@ -92,6 +101,72 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
     doSave(t, c, tg)
   }
 
+  // --- PDF import ---------------------------------------------------------
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
+  const [importMsg, setImportMsg] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+
+  const handlePdfSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // reset so the same file can be re-selected
+    if (!file) return
+
+    const isPdf =
+      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    if (!isPdf) {
+      setImportError('Please choose a PDF file.')
+      return
+    }
+
+    setImporting(true)
+    setImportError(null)
+    setImportMsg(`Extracting text from ${file.name}…`)
+    try {
+      const token = await getToken()
+      const form = new FormData()
+      form.append('file', file)
+
+      const res = await fetch(`${API_URL}/documents/extract-pdf`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.message ?? `Extraction failed (${res.status})`)
+      }
+
+      const { markdown } = (await res.json()) as { markdown: string }
+
+      if (!markdown?.trim()) {
+        setImportError(
+          'No selectable text found — this PDF may be scanned images.',
+        )
+        return
+      }
+
+      // Append to existing content (with spacing) or seed an empty document.
+      setContent((prev) =>
+        prev.trim() ? `${prev.trimEnd()}\n\n${markdown}` : markdown,
+      )
+      // Name the document after the file if it's still the default/empty title.
+      setTitle((t) =>
+        !t.trim() || t === 'Untitled Document'
+          ? file.name.replace(/\.pdf$/i, '')
+          : t,
+      )
+      setImportMsg(null)
+    } catch (err: unknown) {
+      setImportError(
+        err instanceof Error ? err.message : 'Failed to read PDF.',
+      )
+    } finally {
+      setImporting(false)
+    }
+  }
+
   const isSaving = status === 'saving'
 
   return (
@@ -125,7 +200,7 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Autosave indicator — always visible on sm+ */}
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-md px-2 py-1 select-none">
-            <span className="size-1.5 rounded-full bg-green-500 shrink-0" />
+            <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" />
             Autosave: On
           </span>
 
@@ -139,7 +214,7 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
             </span>
           )}
           {status === 'saved' && (
-            <span className="text-xs text-green-600 hidden sm:inline">Saved</span>
+            <span className="text-xs text-emerald-600 hidden sm:inline">Saved</span>
           )}
           {status === 'error' && (
             <span className="text-xs text-destructive">{saveError}</span>
@@ -156,34 +231,91 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
       </header>
 
       {/* Document body */}
-      <div className="flex-1 flex flex-col gap-4 px-4 sm:px-8 py-4 sm:py-6 max-w-4xl mx-auto w-full">
-        {/* Timestamps */}
-        <div className="flex gap-6 text-xs text-muted-foreground">
-          <span>Created: {new Date(document.created_at).toLocaleString()}</span>
-          <span>Updated: {new Date(document.updated_at).toLocaleString()}</span>
+      <div className="flex-1 px-4 sm:px-8 py-5 sm:py-8 max-w-4xl mx-auto w-full">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          {/* Title zone */}
+          <div className="border-b border-border bg-gradient-to-br from-primary/5 to-transparent p-5 sm:p-6 space-y-4">
+            <input
+              className="w-full text-2xl sm:text-3xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/60 text-foreground"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Untitled document"
+            />
+
+            <div className="flex items-center gap-2.5">
+              <Tag className="size-4 text-muted-foreground shrink-0" />
+              <Input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="Add tags, comma separated"
+                className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 h-8"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+              <span>Created {new Date(document.created_at).toLocaleString()}</span>
+              <span>Updated {new Date(document.updated_at).toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Editor toolbar */}
+          <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-2.5 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <FileText className="size-4" />
+              <span>Markdown</span>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={handlePdfSelected}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              title="Extract text from a PDF into this document"
+            >
+              {importing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <FileUp className="size-4" />
+              )}
+              {importing ? 'Importing…' : 'Import PDF'}
+            </Button>
+          </div>
+
+          {/* Import status row */}
+          {(importing || importError) && (
+            <div
+              className={`flex items-center gap-2 px-5 sm:px-6 py-2.5 border-b border-border text-sm ${
+                importError
+                  ? 'text-destructive bg-destructive/5'
+                  : 'text-muted-foreground bg-primary/5'
+              }`}
+            >
+              {importing ? (
+                <Loader2 className="size-4 animate-spin shrink-0" />
+              ) : (
+                <AlertCircle className="size-4 shrink-0" />
+              )}
+              <span>{importing ? importMsg : importError}</span>
+            </div>
+          )}
+
+          {/* Markdown editor */}
+          <div data-color-mode="light">
+            <MDEditor
+              value={content}
+              onChange={(val) => setContent(val ?? '')}
+              height={520}
+              className="!border-0 !rounded-none !shadow-none"
+            />
+          </div>
         </div>
-
-        {/* Title — plain input styled as heading */}
-        <input
-          className="w-full text-2xl font-bold bg-transparent outline-none border-b border-border pb-2 placeholder:text-muted-foreground text-foreground"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Document title"
-        />
-
-        {/* Tags */}
-        <Input
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="Tags (comma separated)"
-        />
-
-        {/* Markdown editor */}
-        <MDEditor
-          value={content}
-          onChange={(val) => setContent(val ?? '')}
-          height={500}
-        />
       </div>
     </div>
   )

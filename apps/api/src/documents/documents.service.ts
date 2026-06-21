@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common'
 import { SupabaseService } from '../supabase/supabase.service'
 import { RagService } from '../rag/rag.service'
 import { CreateDocumentDto } from './dto/create-document.dto'
 import { UpdateDocumentDto } from './dto/update-document.dto'
+import { extractPdfMarkdown, type UploadedPdf } from './pdf-extract'
 
 @Injectable()
 export class DocumentsService {
@@ -97,6 +102,31 @@ export class DocumentsService {
     }
 
     return data
+  }
+
+  /**
+   * Extract markdown text from an uploaded PDF. Stateless — does not touch the
+   * database; the client inserts the returned text into the editor and the
+   * normal autosave path persists it.
+   */
+  async extractPdf(file?: UploadedPdf): Promise<{ markdown: string }> {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('No file was uploaded.')
+    }
+
+    const isPdf =
+      file.mimetype === 'application/pdf' ||
+      file.originalname?.toLowerCase().endsWith('.pdf')
+    if (!isPdf) {
+      throw new BadRequestException('The uploaded file is not a PDF.')
+    }
+
+    try {
+      const markdown = await extractPdfMarkdown(file.buffer)
+      return { markdown }
+    } catch {
+      throw new BadRequestException('Could not read text from this PDF.')
+    }
   }
 
   async remove(id: string, userId: string, accessToken: string) {

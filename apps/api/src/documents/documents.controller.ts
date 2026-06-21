@@ -8,11 +8,15 @@ import {
   Param,
   Request,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { AuthGuard } from '../auth/auth.guard'
 import { DocumentsService } from './documents.service'
 import { CreateDocumentDto } from './dto/create-document.dto'
 import { UpdateDocumentDto } from './dto/update-document.dto'
+import type { UploadedPdf } from './pdf-extract'
 
 @Controller('documents')
 @UseGuards(AuthGuard)
@@ -32,6 +36,16 @@ export class DocumentsController {
   @Post()
   create(@Body() dto: CreateDocumentDto, @Request() req: any) {
     return this.documentsService.create(dto, req.user.id, req.user.accessToken)
+  }
+
+  // Extract markdown text from an uploaded PDF (multipart field "file").
+  // 25 MB cap keeps a single request from buffering an unreasonable file.
+  @Post('extract-pdf')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 25 * 1024 * 1024 } }),
+  )
+  extractPdf(@UploadedFile() file: UploadedPdf) {
+    return this.documentsService.extractPdf(file)
   }
 
   @Patch(':id')
