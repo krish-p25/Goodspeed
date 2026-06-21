@@ -5,7 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Send, FileText, User, Bot, Quote } from 'lucide-react'
-import type { ChatSseEvent, Message, DocumentSource } from '@kb/types'
+import type {
+  ChatSseEvent,
+  MessageWithCitations,
+  DocumentSource,
+  PersistedCitation,
+} from '@kb/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -44,6 +49,51 @@ interface ChatMessage {
 /** Flatten a segments array down to its plain text (used for user messages). */
 function segmentsToText(segments: AnswerSegment[]): string {
   return segments.map((s) => (s.type === 'text' ? s.text : '')).join('')
+}
+
+// Matches the citation markers retained in a persisted answer, e.g. [c0_s1]
+// or a chained [c0_s1][c1_s0]. Mirrors the resolver's COMPLETE_MARKER so
+// reload renders the same segments that were streamed.
+const CITATION_MARKER = /\[(?:c\d+_s\d+(?:\]\[c\d+_s\d+)*)\]/g
+
+/**
+ * Rebuild the interleaved text/citation segments of a persisted assistant
+ * message. The stored content keeps citation markers inline; the citations
+ * array (ordered by appearance) supplies the resolved sentences. The Nth
+ * marker maps to the Nth citation. Markers without a matching citation are
+ * dropped so raw "[c0_s1]" never reaches the screen.
+ */
+function reconstructSegments(
+  content: string,
+  citations?: PersistedCitation[],
+): AnswerSegment[] {
+  const segments: AnswerSegment[] = []
+  let lastIndex = 0
+  let citationIndex = 0
+
+  CITATION_MARKER.lastIndex = 0
+  let match: RegExpExecArray | null
+  while ((match = CITATION_MARKER.exec(content)) !== null) {
+    const before = content.slice(lastIndex, match.index)
+    if (before) segments.push({ type: 'text', text: before })
+
+    const citation = citations?.[citationIndex]
+    if (citation) {
+      segments.push({
+        type: 'citation',
+        ids: citation.sentences.map((s) => s.id),
+        sentences: citation.sentences,
+        markerText: match[0],
+      })
+    }
+    citationIndex++
+    lastIndex = match.index + match[0].length
+  }
+
+  const tail = content.slice(lastIndex)
+  if (tail) segments.push({ type: 'text', text: tail })
+  if (segments.length === 0) segments.push({ type: 'text', text: content })
+  return segments
 }
 
 /**
@@ -88,17 +138,27 @@ export function ChatWindow({
   initialMessages,
 }: {
   conversationId?: string
-  initialMessages: Message[]
+  initialMessages: MessageWithCitations[]
 }) {
   const router = useRouter()
   const [conversationId, setConversationId] = useState<string | undefined>(
     initialConversationId,
   )
   const [messages, setMessages] = useState<ChatMessage[]>(
-    initialMessages.map((m) => ({
-      role: m.role,
-      segments: [{ type: 'text', text: m.content }],
-    })),
+    initialMessages.map((m) => {
+      if (m.role !== 'assistant') {
+        return { role: m.role, segments: [{ type: 'text', text: m.content }] }
+      }
+      const sources = m.sources ?? []
+      return {
+        role: m.role,
+        segments: reconstructSegments(m.content, m.citations),
+        sources,
+        // A grounded answer always persists at least one source; none means
+        // this was a no-context reply (matches the streaming heuristic).
+        noContext: sources.length === 0,
+      }
+    }),
   )
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)

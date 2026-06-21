@@ -3,7 +3,7 @@ import type {
   Document as KBDocument,
   ChatResponse,
   Conversation,
-  Message,
+  MessageWithCitations,
 } from '@kb/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -73,6 +73,8 @@ export const chatApi = {
     apiFetch<Conversation[]>('/chat/conversations'),
 
   getMessages: (conversationId: string) =>
-    apiFetch<Message[]>(`/chat/conversations/${conversationId}/messages`),
+    apiFetch<MessageWithCitations[]>(
+      `/chat/conversations/${conversationId}/messages`,
+    ),
 }
 

@@ -218,6 +218,10 @@ export class ChatService {
         subject.next({ data: JSON.stringify(tokenEvent) })
       } else if (segment.type === 'citation' && segment.citation) {
         const { ids, sentences, markerText } = segment.citation
+        // Retain the marker in the persisted answer so the citation's inline
+        // position survives a reload. The live UI renders a badge from the
+        // citation event; the stored markerText is only re-parsed on reload.
+        fullAnswer += markerText
         const citationEvent: CitationStreamEvent = {
           type: 'citation',
           ids,

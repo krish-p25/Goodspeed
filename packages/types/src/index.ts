@@ -97,6 +97,27 @@ export interface MessageSource {
   position: number
 }
 
+/**
+ * A single resolved citation as reconstructed for a persisted message.
+ * One citation may group several sentences (a chained marker like
+ * [c0_s1][c1_s0]). Ordered by appearance within the message so the
+ * frontend can zip them positionally against the markers left in the
+ * answer text.
+ */
+export interface PersistedCitation {
+  sentences: Array<{ id: string; documentTitle: string; text: string }>
+}
+
+/**
+ * A stored message plus the data needed to re-render its citations and
+ * source footer after a reload. Both fields are present only for assistant
+ * messages — citations for inline badges, sources for the document footer.
+ */
+export interface MessageWithCitations extends Message {
+  citations?: PersistedCitation[]
+  sources?: DocumentSource[]
+}
+
 export interface ChatRequest {
   question: string
   conversationId?: string

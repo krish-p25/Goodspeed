@@ -1,6 +1,6 @@
 import { chatApi } from '@/lib/api'
 import { ChatWindow } from '../chat-window'
-import type { Message } from '@kb/types'
+import type { MessageWithCitations } from '@kb/types'
 
 export default async function ConversationPage({
   params,
@@ -9,7 +9,7 @@ export default async function ConversationPage({
 }) {
   const { conversationId } = await params
 
-  let messages: Message[] = []
+  let messages: MessageWithCitations[] = []
   try {
     messages = await chatApi.getMessages(conversationId)
   } catch {
