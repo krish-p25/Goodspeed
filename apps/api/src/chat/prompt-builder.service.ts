@@ -58,6 +58,54 @@ export class PromptBuilderService {
   }
 
   /**
+   * Build the messages used to condense a follow-up question into a
+   * standalone search query.
+   *
+   * Retrieval embeds a single query string, so a fragmentary follow-up like
+   * "how long does step 2 take" carries none of the context needed to match
+   * the right document and retrieves nothing. This rewrite folds the relevant
+   * conversation history back into the question so the embedding lands on the
+   * document the user is actually talking about.
+   *
+   * The model is instructed to return ONLY the rewritten query (no preamble),
+   * and to pass already-standalone questions through unchanged.
+   */
+  buildCondenseMessages(params: {
+    question: string
+    history: Array<{ role: 'user' | 'assistant'; content: string }>
+  }): ChatMessage[] {
+    const { question, history } = params
+
+    const system = [
+      'You rewrite a user\'s latest message into a single standalone search query for a document retrieval system.',
+      '',
+      '- Use the conversation history only to resolve references (pronouns, "it", "that recipe", "step 2", etc.) into explicit terms.',
+      '- Preserve the original intent and keywords; do not answer the question or add information that is not implied by the conversation.',
+      '- If the latest message is already self-contained, return it unchanged.',
+      '- Output ONLY the rewritten query as plain text, with no quotes, labels, or explanation.',
+    ].join('\n')
+
+    const transcript = history
+      .slice(-this.historyWindow)
+      .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+      .join('\n')
+
+    const user = [
+      'Conversation history:',
+      transcript,
+      '',
+      `Latest message: ${question}`,
+      '',
+      'Standalone search query:',
+    ].join('\n')
+
+    return [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ]
+  }
+
+  /**
    * Format retrieved chunks for the system message.
    * Each chunk is labelled with a source header and sentence IDs.
    * Sentence IDs are included so the model can cite specific sentences

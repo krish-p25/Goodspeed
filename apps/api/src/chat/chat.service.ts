@@ -8,6 +8,9 @@ import { ConversationService } from './conversation.service'
 import { CitationStreamResolver } from './citation-resolver'
 import type { ChatResponse, ChatSseEvent, CitationStreamEvent } from '@kb/types'
 
+// How many prior messages to load for history-aware retrieval and prompting.
+const HISTORY_WINDOW = 6
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -25,19 +28,23 @@ export class ChatService {
   }): Promise<ChatResponse> {
     const { question, userId, conversationId } = params
 
-    // Step 1: Retrieve relevant chunks
-    const chunks = await this.retrieval.retrieve({ query: question, userId })
+    // Step 1: Resolve the conversation and load history BEFORE retrieval so a
+    // fragmentary follow-up can be condensed into a standalone search query.
+    const convId = await this.conversation.getOrCreate({
+      conversationId,
+      userId,
+      title: question,
+    })
+    const history = await this.conversation.getHistory(convId, HISTORY_WINDOW)
 
-    // Step 2: No-context short-circuit
+    // Step 2: Condense the question against history, then retrieve.
+    const searchQuery = await this.buildSearchQuery(question, history)
+    const chunks = await this.retrieval.retrieve({ query: searchQuery, userId })
+
+    // Step 3: No-context short-circuit
     // If nothing clears the threshold, skip the LLM call entirely.
-    // Still persist the conversation and messages so history is maintained.
+    // Still persist the messages so history is maintained.
     if (chunks.length === 0) {
-      const convId = await this.conversation.getOrCreate({
-        conversationId,
-        userId,
-        title: question,
-      })
-
       const messageId = await this.conversation.persistMessages({
         conversationId: convId,
         userId,
@@ -55,15 +62,6 @@ export class ChatService {
         noContext: true,
       }
     }
-
-    // Step 3: Get or create conversation and fetch history
-    const convId = await this.conversation.getOrCreate({
-      conversationId,
-      userId,
-      title: question,
-    })
-
-    const history = await this.conversation.getHistory(convId, 6)
 
     // Step 4: Build prompt and call LLM
     const messages = this.promptBuilder.buildMessages({
@@ -141,17 +139,21 @@ export class ChatService {
   ): Promise<void> {
     const { question, userId, conversationId } = params
 
-    // Step 1: Retrieve chunks
-    const chunks = await this.retrieval.retrieve({ query: question, userId })
+    // Step 1: Resolve the conversation and load history BEFORE retrieval so a
+    // fragmentary follow-up can be condensed into a standalone search query.
+    const convId = await this.conversation.getOrCreate({
+      conversationId,
+      userId,
+      title: question,
+    })
+    const history = await this.conversation.getHistory(convId, HISTORY_WINDOW)
 
-    // Step 2: No-context short-circuit
+    // Step 2: Condense the question against history, then retrieve.
+    const searchQuery = await this.buildSearchQuery(question, history)
+    const chunks = await this.retrieval.retrieve({ query: searchQuery, userId })
+
+    // Step 3: No-context short-circuit
     if (chunks.length === 0) {
-      const convId = await this.conversation.getOrCreate({
-        conversationId,
-        userId,
-        title: question,
-      })
-
       const messageId = await this.conversation.persistMessages({
         conversationId: convId,
         userId,
@@ -181,14 +183,6 @@ export class ChatService {
       subject.complete()
       return
     }
-
-    // Step 3: Get or create conversation and fetch history
-    const convId = await this.conversation.getOrCreate({
-      conversationId,
-      userId,
-      title: question,
-    })
-    const history = await this.conversation.getHistory(convId, 6)
 
     // Step 4: Build prompt
     const messages = this.promptBuilder.buildMessages({ question, chunks, history })
@@ -280,5 +274,40 @@ export class ChatService {
     const doneEvent: ChatSseEvent = { type: 'done' }
     subject.next({ data: JSON.stringify(doneEvent) })
     subject.complete()
+  }
+
+  /**
+   * Produce the query string used for retrieval.
+   *
+   * For the first turn of a conversation (no history) the raw question is
+   * already standalone, so it is used as-is and no extra LLM call is made.
+   * For follow-ups, the question is condensed against recent history so that
+   * fragmentary references ("how long does step 2 take") resolve to the
+   * document the user is actually discussing.
+   *
+   * Condensing is best-effort: any failure or empty result falls back to the
+   * raw question so retrieval never breaks because of the rewrite step.
+   */
+  private async buildSearchQuery(
+    question: string,
+    history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  ): Promise<string> {
+    if (history.length === 0) return question
+
+    try {
+      const messages = this.promptBuilder.buildCondenseMessages({
+        question,
+        history,
+      })
+      const result = await this.llm.chat(messages, {
+        temperature: 0,
+        maxTokens: 128,
+      })
+      const condensed = result.content.trim()
+      return condensed.length > 0 ? condensed : question
+    } catch {
+      // Never let the rewrite step take down the chat request.
+      return question
+    }
   }
 }
