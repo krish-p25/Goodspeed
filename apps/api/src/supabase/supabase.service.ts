@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseUrl } from './supabase-url'
 
 @Injectable()
 export class SupabaseService {
@@ -10,7 +11,7 @@ export class SupabaseService {
     // Admin client: bypasses RLS. Use only for operations that legitimately
     // need elevated access (e.g. writing embeddings in Phase 5).
     this.adminClient = createClient(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
+      getSupabaseUrl(this.config),
       this.config.getOrThrow('SUPABASE_SECRET_KEY'),
       { auth: { persistSession: false } },
     )
@@ -27,7 +28,7 @@ export class SupabaseService {
    */
   getUserClient(accessToken: string): SupabaseClient {
     return createClient(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
+      getSupabaseUrl(this.config),
       this.config.getOrThrow('SUPABASE_SECRET_KEY'),
       {
         auth: { persistSession: false },

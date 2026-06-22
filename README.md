@@ -41,9 +41,9 @@ Quick summary:
 git clone https://github.com/krish-p25/Goodspeed.git
 cd Goodspeed
 npm run setup          # install all workspaces
-cp .env.example .env   # fill in Supabase and AI provider keys
+cp .env.example .env   # set your Supabase project ref + keys and AI provider keys
 npx supabase login
-npx supabase link --project-ref <your-project-ref>
+npx supabase link --project-ref <your-project-ref>   # same ref as in .env
 npx supabase db push   # applies schema, RLS, and match_chunks function
 npm run dev            # starts web (:3020) and API (:3010)
 ```

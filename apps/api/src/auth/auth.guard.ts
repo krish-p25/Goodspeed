@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { createClient } from '@supabase/supabase-js'
+import { getSupabaseUrl } from '../supabase/supabase-url'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -25,7 +26,7 @@ export class AuthGuard implements CanActivate {
     // call per request. The publishable key is used (not the secret key) as
     // this is a low-privilege verification-only client.
     const verifier = createClient(
-      this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_URL'),
+      getSupabaseUrl(this.config),
       this.config.getOrThrow('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY'),
       { auth: { persistSession: false } },
     )

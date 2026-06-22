@@ -69,13 +69,15 @@ cp .env.example .env   # if .env.example is present in your clone
 
 In your Supabase project dashboard:
 
-- **`NEXT_PUBLIC_SUPABASE_URL`** — Project Settings → API → *Project URL*
+- **`NEXT_PUBLIC_SUPABASE_PROJECT_REF`** — your project **ref**: the subdomain
+  of the Project URL under Project Settings → API. For
+  `https://abcdxyz.supabase.co` the ref is `abcdxyz`. The full REST URL and the
+  auth JWKS endpoint are derived from this automatically in code, so you don't
+  configure them separately.
 - **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** — Project Settings → API →
   *Publishable* (client-side, RLS-scoped) key
 - **`SUPABASE_SECRET_KEY`** — Project Settings → API → *Secret* (server-only)
   key
-- **`SUPABASE_JWKS_URL`** — your project URL with
-  `/auth/v1/.well-known/jwks.json` appended
 
 > ⚠️ **Security:** `SUPABASE_SECRET_KEY` bypasses Row-Level Security. Keep it
 > server-side only — never expose it to the browser, never prefix it with
@@ -200,8 +202,9 @@ Make sure both apps are running, that `NEXT_PUBLIC_API_URL` points at the API
 port, and that `CORS_ORIGIN` matches the web origin (`http://localhost:3020`).
 
 **`401 Unauthorized` on API calls**
-Check the Supabase variables in `.env` — in particular `SUPABASE_JWKS_URL` must
-point at your project, and the publishable key must be correct.
+Check the Supabase variables in `.env` — in particular
+`NEXT_PUBLIC_SUPABASE_PROJECT_REF` must be your real project ref (the URL and
+JWKS endpoint are derived from it), and the publishable key must be correct.
 
 **Changes to `.env` not taking effect**
 Environment variables are read at process start. Stop and restart
