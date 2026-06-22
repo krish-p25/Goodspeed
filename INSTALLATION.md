@@ -19,15 +19,15 @@ root**, and the API uses a Supabase (Postgres + pgvector) database.
 
 Install these before you begin:
 
-- **Node.js 22 or 24 (LTS recommended — Node 18 reached end-of-life April 2025) — check with `node -v`
+- **Node.js 22 or 24 (LTS recommended — Node 18 reached end-of-life April 2025)** — check with `node -v`
 - **npm ≥ 9** — bundled with Node; check with `npm -v`
 - **Git** — to clone the repository
 - **A Supabase project** — free tier is fine. Create one at
   [supabase.com](https://supabase.com). You will need its URL, API keys, and
   database password.
 - **An LLM provider API key** — by default the project uses **OpenAI**
-  (chat + embeddings). You can swap providers later via
-  `apps/api/ai.config.json` (see [step 5](#5-configure-the-ai-provider-optional)).
+  (chat + embeddings). You can swap providers later via the Settings page
+  (see [step 6](#6-configure-the-ai-provider-optional)).
 
 > The Supabase CLI does **not** need a separate global install — it ships as a
 > project dependency and is run through `npx supabase …`.
@@ -62,7 +62,7 @@ Both apps load the **same `.env` file at the repository root**
 (the web app via `--env-file=../../.env`, the API via `dotenv`). Create it:
 
 ```bash
-cp .env.example .env   # if .env.example is present in your clone
+cp .env.example .env
 ```
 
 ### Where to find the Supabase values
@@ -114,6 +114,20 @@ will exist in your project with Row-Level Security enabled.
 > schema in the Supabase dashboard SQL editor, or your local migrations will
 > drift from the remote database.
 
+### Disable email confirmation (required)
+
+By default Supabase requires users to confirm their email address before they
+can sign in. You must disable this before signing up, otherwise the sign-up
+flow will complete but you will not be able to log in.
+
+In your Supabase project dashboard:
+
+**Authentication → Providers → Email → toggle "Confirm email" off**
+
+You can re-enable this at any time. The rest of the auth flow — sign-up,
+sign-in, sign-out, session management — works identically with or without
+confirmation enabled.
+
 ---
 
 ## 6. Configure the AI provider (optional)
@@ -149,7 +163,7 @@ This runs each app in watch mode:
 - **Web:** http://localhost:3020/login
 - **API:** http://localhost:3010
 
-Open **http://localhost:3020/login** in your browser, sign up / log in, and you're
+Open **http://localhost:3020/login** in your browser, sign up, and you're
 running.
 
 ### Running a single app
@@ -166,7 +180,7 @@ npm run dev --workspace=@kb/api   # backend only
 - **API health:** `curl http://localhost:3010/health` → `{"status":"ok"}`
 - **Web:** http://localhost:3020 loads the login page
 - After logging in, create a document, then open **Chat** and ask a question
-  about it — you should get an answer with citation badges.
+  about it — you should get a streamed answer with citation highlights
 
 ---
 
@@ -183,10 +197,10 @@ Run from the repository root:
 
 Supabase CLI (run from the repository root):
 
-| Command                                      | Description                          |
-| -------------------------------------------- | ------------------------------------ |
-| `npx supabase db push`                       | Apply pending migrations to remote   |
-| `npx supabase migration list`                | Compare local vs remote migrations   |
+| Command                         | Description                        |
+| ------------------------------- | ---------------------------------- |
+| `npx supabase db push`          | Apply pending migrations to remote |
+| `npx supabase migration list`   | Compare local vs remote migrations |
 
 ---
 
@@ -194,22 +208,24 @@ Supabase CLI (run from the repository root):
 
 **`EADDRINUSE: address already in use :::3010` (or `:3020`)**
 Another process is using the port. Either stop it, or change `PORT` / `WEB_PORT`
-in `.env` (and update `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SITE_URL` /
-`CORS_ORIGIN` to match).
+in `.env` (and update `NEXT_PUBLIC_API_URL` / `CORS_ORIGIN` to match).
 
 **Web app can't reach the API / CORS errors**
 Make sure both apps are running, that `NEXT_PUBLIC_API_URL` points at the API
 port, and that `CORS_ORIGIN` matches the web origin (`http://localhost:3020`).
 
 **`401 Unauthorized` on API calls**
-Check the Supabase variables in `.env` — in particular
-`NEXT_PUBLIC_SUPABASE_PROJECT_REF` must be your real project ref (the URL and
-JWKS endpoint are derived from it), and the publishable key must be correct.
+Check the Supabase variables in `.env` — `NEXT_PUBLIC_SUPABASE_PROJECT_REF`
+must be your real project ref, and the publishable key must be correct.
+
+**Can't sign in after signing up**
+Email confirmation is still enabled. Go to your Supabase dashboard →
+Authentication → Providers → Email and toggle **Confirm email** off.
 
 **Changes to `.env` not taking effect**
-Environment variables are read at process start. Stop and restart
-`npm run dev` after editing `.env`. (Changes to `apps/api/ai.config.json` are
-the exception — they apply on the next request without a restart.)
+Environment variables are read at process start. Stop and restart `npm run dev`
+after editing `.env`. (Changes made via the Settings page apply on the next
+request without a restart.)
 
 **Migration push fails to connect**
 Re-run `npx supabase login`, confirm the project ref in
@@ -217,5 +233,5 @@ Re-run `npx supabase login`, confirm the project ref in
 database password.
 
 **AI requests fail with an authentication error**
-The API key for the provider selected in `apps/api/ai.config.json` is missing or
-wrong in `.env`. Set the correct key and restart.
+The API key for the active provider is missing or incorrect in `.env`. Add the
+correct key and restart.
