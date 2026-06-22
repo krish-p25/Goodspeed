@@ -424,7 +424,7 @@ function SettingsForm({
       </div>
 
       {/* Save */}
-      <div className="flex items-center gap-3 pt-1">
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <Button onClick={onSave} disabled={saving}>
           {saving ? (
             <Loader2 className="size-4 animate-spin" />

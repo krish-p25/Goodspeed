@@ -4,6 +4,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { MessageSquarePlus, LayoutDashboard, FolderOpen, MessageSquare } from 'lucide-react'
 import type { Conversation } from '@kb/types'
 import { ConversationList } from './conversation-list'
+import { MobileChatBar } from './mobile-conversations'
 
 export default async function ChatLayout({
   children,
@@ -56,17 +57,9 @@ export default async function ChatLayout({
           </nav>
         </aside>
 
-        {/* Mobile new-chat bar */}
+        {/* Mobile chat bar + conversations drawer */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="md:hidden border-b border-border p-2">
-            <Link
-              href="/chat/new"
-              className={buttonVariants({ variant: 'default', size: 'sm', className: 'w-full' })}
-            >
-              <MessageSquarePlus className="size-4" />
-              New Chat
-            </Link>
-          </div>
+          <MobileChatBar conversations={conversations} />
           {children}
         </div>
       </div>

@@ -114,7 +114,7 @@ function AnswerRenderer({ segments }: { segments: AnswerSegment[] }) {
               <Quote className="size-2.5" />
               cite
             </sup>
-            <span className="absolute bottom-full left-0 z-10 hidden group-hover:block w-72 p-2.5 bg-popover border border-border rounded-lg shadow-lg text-sm">
+            <span className="absolute bottom-full left-0 z-10 hidden group-hover:block w-72 max-w-[calc(100vw-2rem)] p-2.5 bg-popover border border-border rounded-lg shadow-lg text-sm">
               {seg.sentences.map((s) => (
                 <span key={s.id} className="block mb-1 last:mb-0">
                   <span className="font-medium text-muted-foreground text-xs">

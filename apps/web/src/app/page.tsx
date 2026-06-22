@@ -15,8 +15,8 @@ export default async function Home() {
   const status = await getApiHealth();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="mb-8 text-4xl font-bold">Knowledge Base</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 sm:p-12 md:p-24">
+      <h1 className="mb-8 text-3xl sm:text-4xl font-bold">Knowledge Base</h1>
       <div className="flex items-center gap-2 text-lg">
         <span className="text-gray-600">API Status:</span>
         <span
