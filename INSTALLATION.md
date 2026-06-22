@@ -144,10 +144,10 @@ npm run dev
 
 This runs each app in watch mode:
 
-- **Web:** http://localhost:3020
+- **Web:** http://localhost:3020/login
 - **API:** http://localhost:3010
 
-Open **http://localhost:3020** in your browser, sign up / log in, and you're
+Open **http://localhost:3020/login** in your browser, sign up / log in, and you're
 running.
 
 ### Running a single app
