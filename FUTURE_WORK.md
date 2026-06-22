@@ -69,3 +69,23 @@ would improve recall for queries containing exact terms or proper nouns
 that embedding-based similarity can underweight. Supabase supports
 full-text search natively alongside pgvector, making this a natural
 extension of the existing retrieval layer.
+
+## Dev-mode page compile times
+
+First load of a route in development is noticeably slow. This affects the
+development experience only — production builds are compiled ahead of time by
+next build — but it slows iteration and is worth investigating properly. Next.js
+compiles each route lazily on its first request in dev, so the cost is dominated
+by the size of that route's client module graph, and a few very large libraries
+inflate it: lucide-react (~38 MB on disk) is imported on every page, while
+recharts with its d3 stack (~9 MB) and the @uiw/react-md-editor markdown and
+syntax pipeline (~5 MB) weigh down the dashboard and document editor
+respectively. There is currently no build tuning to mitigate this —
+next.config.js is empty, so barrel imports are not collapsed via
+optimizePackageImports, and dev runs on Turbopack, which was still beta in Next
+14.2 and does not honour all of the webpack-side import optimizations. The
+Tailwind v4 setup adds further overhead through a redundant @source glob and a
+runtime shadcn CSS import. The fix would combine collapsing those barrel imports,
+benchmarking Turbopack against webpack (or upgrading to Next 15 where Turbopack
+dev is stable), keeping the heaviest libraries lazily loaded, and trimming the
+Tailwind configuration.
