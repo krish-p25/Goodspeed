@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common'
+import { Injectable, Inject, Logger } from '@nestjs/common'
 import { Observable, Subject } from 'rxjs'
 import { LLM_PROVIDER } from '../ai/llm-provider.interface'
 import type { LLMProvider } from '../ai/llm-provider.interface'
@@ -16,6 +16,8 @@ const HISTORY_WINDOW = 6
 
 @Injectable()
 export class ChatService {
+  private readonly logger = new Logger(ChatService.name)
+
   constructor(
     @Inject(LLM_PROVIDER) private readonly llm: LLMProvider,
     private readonly retrieval: RetrievalService,
@@ -339,16 +341,44 @@ export class ChatService {
         question,
         history,
       })
-      const result = await this.llm.chat(messages, {
-        temperature: 0,
-        maxTokens: 128,
-      })
-      const condensed = result.content.trim()
-      return condensed.length > 0 ? condensed : question
-    } catch {
+      // Call the LLM exactly like the answer-generation path does — with no
+      // options. Passing temperature/max_tokens here previously broke condensing
+      // on reasoning models (the tiny token budget was spent on reasoning and
+      // returned empty content, or the params were rejected outright), which
+      // silently fell back to the raw fragment and made follow-ups fail.
+      const result = await this.llm.chat(messages)
+      const condensed = this.cleanCondensed(result.content)
+      if (condensed.length === 0) {
+        this.logger.warn(
+          `Condense returned empty content for "${question}"; using raw question for retrieval.`,
+        )
+        return question
+      }
+      return condensed
+    } catch (err) {
       // Never let the rewrite step take down the chat request.
+      this.logger.warn(
+        `Condense step failed for "${question}": ${
+          err instanceof Error ? err.message : String(err)
+        }. Using raw question for retrieval.`,
+      )
       return question
     }
+  }
+
+  /**
+   * Normalise the model's condensed query: take the first non-empty line and
+   * strip a single pair of wrapping quotes. The condense prompt asks for the
+   * bare query, but without a pinned temperature the model may occasionally add
+   * surrounding quotes or a trailing line — this keeps retrieval clean.
+   */
+  private cleanCondensed(raw: string): string {
+    const firstLine =
+      raw
+        .split('\n')
+        .map((line) => line.trim())
+        .find((line) => line.length > 0) ?? ''
+    return firstLine.replace(/^["']|["']$/g, '').trim()
   }
 
   /**
