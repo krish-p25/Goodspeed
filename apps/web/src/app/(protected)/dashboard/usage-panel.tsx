@@ -17,7 +17,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 const PERIODS: { value: TokenUsagePeriod; label: string }[] = [
   { value: 'today', label: 'Today' },
-  { value: 'week', label: 'This week' },
+  { value: 'week', label: 'Last 7 days' },
   { value: 'month', label: 'This month' },
 ]
 
@@ -117,6 +117,9 @@ export function UsagePanel() {
                   />
                   <YAxis tick={{ fontSize: 11 }} width={48} />
                   <Tooltip
+                    labelFormatter={(_label, payload) =>
+                      payload?.[0]?.payload?.fullLabel ?? _label
+                    }
                     formatter={(value, name) => [
                       Number(value).toLocaleString(),
                       name === 'chatTokens' ? 'Chat tokens' : 'Embedding tokens',

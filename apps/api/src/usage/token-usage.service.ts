@@ -185,10 +185,8 @@ export class TokenUsageService {
     if (period === 'today') {
       start.setUTCHours(0, 0, 0, 0)
     } else if (period === 'week') {
-      // Start of current week — Monday
-      const day = start.getUTCDay()
-      const diff = day === 0 ? -6 : 1 - day // adjust for Sunday
-      start.setUTCDate(start.getUTCDate() + diff)
+      // Rolling last 7 days: today plus the previous 6 days.
+      start.setUTCDate(start.getUTCDate() - 6)
       start.setUTCHours(0, 0, 0, 0)
     } else {
       // Start of current calendar month
@@ -200,7 +198,7 @@ export class TokenUsageService {
 
   private getPeriodLabel(now: Date, period: TokenUsagePeriod): string {
     if (period === 'today') return 'Today'
-    if (period === 'week') return 'This week'
+    if (period === 'week') return 'Last 7 days'
     return now.toLocaleString('en-GB', {
       month: 'long',
       year: 'numeric',
@@ -251,6 +249,7 @@ export class TokenUsageService {
       cumulativeEmbed += embedByBucket.get(bucket.key) ?? 0
       return {
         label: bucket.label,
+        fullLabel: bucket.fullLabel,
         chatTokens: cumulativeChat,
         embeddingTokens: cumulativeEmbed,
         totalTokens: cumulativeChat + cumulativeEmbed,
@@ -271,36 +270,63 @@ export class TokenUsageService {
     period: TokenUsagePeriod,
     now: Date,
     periodStart: Date,
-  ): Array<{ key: string; label: string }> {
+  ): Array<{ key: string; label: string; fullLabel: string }> {
     if (period === 'today') {
-      // Hours 0 to current hour
+      // Hours 0 to current hour. The tooltip and axis share the same label.
       const currentHour = now.getUTCHours()
-      return Array.from({ length: currentHour + 1 }, (_, i) => ({
-        key: String(i),
-        label: `${String(i).padStart(2, '0')}:00`,
-      }))
+      return Array.from({ length: currentHour + 1 }, (_, i) => {
+        const label = `${String(i).padStart(2, '0')}:00`
+        return { key: String(i), label, fullLabel: label }
+      })
     }
+    const weekdayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const weekdayLong = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ]
     if (period === 'week') {
-      // Only include days up to today
+      // Only include days up to today. Axis shows "Mon", tooltip shows the
+      // full weekday plus the date, e.g. "Monday 22 June".
       const current = new Date(periodStart)
-      const result: Array<{ key: string; label: string }> = []
+      const result: Array<{ key: string; label: string; fullLabel: string }> =
+        []
       while (current <= now) {
-        const label = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
-          current.getUTCDay()
-        ]
-        result.push({ key: label, label })
+        const day = current.getUTCDay()
+        result.push({
+          key: weekdayShort[day],
+          label: weekdayShort[day],
+          fullLabel: `${weekdayLong[day]} ${this.formatDayMonth(current)}`,
+        })
         current.setUTCDate(current.getUTCDate() + 1)
       }
       return result
     }
-    // Month: dates 1 to today's date
-    const result: Array<{ key: string; label: string }> = []
+    // Month: dates 1 to today's date. Axis shows "22", tooltip shows "22 June".
+    const result: Array<{ key: string; label: string; fullLabel: string }> = []
     const current = new Date(periodStart)
     while (current <= now) {
       const date = current.getUTCDate()
-      result.push({ key: String(date), label: String(date) })
+      result.push({
+        key: String(date),
+        label: String(date),
+        fullLabel: this.formatDayMonth(current),
+      })
       current.setUTCDate(date + 1)
     }
     return result
+  }
+
+  /** Format a date as "22 June" in UTC. */
+  private formatDayMonth(date: Date): string {
+    return date.toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'UTC',
+    })
   }
 }

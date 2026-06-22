@@ -269,7 +269,8 @@ export interface TokenUsageRow {
 // chatTokens: cumulative chat tokens up to this point in the period
 // embeddingTokens: cumulative embedding tokens up to this point
 export interface UsageDataPoint {
-  label: string
+  label: string // compact axis tick, e.g. "22", "Mon", "14:00"
+  fullLabel: string // full label for the tooltip header, e.g. "22 June", "Monday", "14:00"
   chatTokens: number
   embeddingTokens: number
   totalTokens: number
