@@ -132,7 +132,7 @@ floor regardless of whether sentence-level markers resolve.
 ## What I would improve or add given more time
 
 The full list with detail on each item is in
-[FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md). The most significant
+[FUTURE_WORK.md](./FUTURE_WORK.md). The most significant
 items:
 
 - **Team collaboration and permissions** — workspace model with role-based
@@ -156,6 +156,12 @@ items:
   nouns.
 - **API key management from settings** — securely configuring provider keys
   from the UI rather than requiring server environment variable access.
+- **Faster dev-mode compiles** — first-load route compilation in `next dev`
+  is slow, driven by large client-library barrels (`lucide-react`,
+  `recharts`, `@uiw/react-md-editor`) compiling per route with no
+  `optimizePackageImports` tuning. Investigate barrel optimization, Turbopack
+  vs. webpack, and lazier loading. (Affects dev only — production builds are
+  precompiled.)
 
 ---
 
