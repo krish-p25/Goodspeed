@@ -101,67 +101,87 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
     doSave(t, c, tg)
   }
 
-  // --- PDF import ---------------------------------------------------------
+  // --- File import (PDF / TXT) --------------------------------------------
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
   const [importMsg, setImportMsg] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
 
-  const handlePdfSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Append imported text to the existing content (or seed an empty document),
+  // and name the document after the file if the title is still default/empty.
+  const applyImportedText = (text: string, fileName: string) => {
+    setContent((prev) =>
+      prev.trim() ? `${prev.trimEnd()}\n\n${text}` : text,
+    )
+    setTitle((t) =>
+      !t.trim() || t === 'Untitled Document'
+        ? fileName.replace(/\.(pdf|txt)$/i, '')
+        : t,
+    )
+  }
+
+  // Read a plain-text file directly in the browser — no server round-trip.
+  const importTxt = async (file: File) => {
+    setImportMsg(`Reading ${file.name}…`)
+    const text = await file.text()
+    if (!text.trim()) {
+      setImportError('That file is empty.')
+      return
+    }
+    applyImportedText(text, file.name)
+    setImportMsg(null)
+  }
+
+  // Send a PDF to the server to extract its selectable text.
+  const importPdf = async (file: File) => {
+    setImportMsg(`Extracting text from ${file.name}…`)
+    const token = await getToken()
+    const form = new FormData()
+    form.append('file', file)
+
+    const res = await fetch(`${API_URL}/documents/extract-pdf`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null)
+      throw new Error(body?.message ?? `Extraction failed (${res.status})`)
+    }
+
+    const { markdown } = (await res.json()) as { markdown: string }
+    if (!markdown?.trim()) {
+      setImportError('No selectable text found — this PDF may be scanned images.')
+      return
+    }
+    applyImportedText(markdown, file.name)
+    setImportMsg(null)
+  }
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = '' // reset so the same file can be re-selected
     if (!file) return
 
-    const isPdf =
-      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    if (!isPdf) {
-      setImportError('Please choose a PDF file.')
+    const name = file.name.toLowerCase()
+    const isPdf = file.type === 'application/pdf' || name.endsWith('.pdf')
+    const isTxt = file.type === 'text/plain' || name.endsWith('.txt')
+    if (!isPdf && !isTxt) {
+      setImportError('Please choose a PDF or TXT file.')
       return
     }
 
     setImporting(true)
     setImportError(null)
-    setImportMsg(`Extracting text from ${file.name}…`)
     try {
-      const token = await getToken()
-      const form = new FormData()
-      form.append('file', file)
-
-      const res = await fetch(`${API_URL}/documents/extract-pdf`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message ?? `Extraction failed (${res.status})`)
+      if (isPdf) {
+        await importPdf(file)
+      } else {
+        await importTxt(file)
       }
-
-      const { markdown } = (await res.json()) as { markdown: string }
-
-      if (!markdown?.trim()) {
-        setImportError(
-          'No selectable text found — this PDF may be scanned images.',
-        )
-        return
-      }
-
-      // Append to existing content (with spacing) or seed an empty document.
-      setContent((prev) =>
-        prev.trim() ? `${prev.trimEnd()}\n\n${markdown}` : markdown,
-      )
-      // Name the document after the file if it's still the default/empty title.
-      setTitle((t) =>
-        !t.trim() || t === 'Untitled Document'
-          ? file.name.replace(/\.pdf$/i, '')
-          : t,
-      )
-      setImportMsg(null)
     } catch (err: unknown) {
-      setImportError(
-        err instanceof Error ? err.message : 'Failed to read PDF.',
-      )
+      setImportError(err instanceof Error ? err.message : 'Failed to read file.')
     } finally {
       setImporting(false)
     }
@@ -267,9 +287,9 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
             <input
               ref={fileInputRef}
               type="file"
-              accept="application/pdf,.pdf"
+              accept="application/pdf,.pdf,text/plain,.txt"
               className="hidden"
-              onChange={handlePdfSelected}
+              onChange={handleFileSelected}
             />
             <Button
               type="button"
@@ -277,14 +297,14 @@ export function DocumentEditor({ document }: { document: KBDocument }) {
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={importing}
-              title="Extract text from a PDF into this document"
+              title="Import text from a PDF or TXT file into this document"
             >
               {importing ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <FileUp className="size-4" />
               )}
-              {importing ? 'Importing…' : 'Import PDF'}
+              {importing ? 'Importing…' : 'Import PDF / TXT'}
             </Button>
           </div>
 
