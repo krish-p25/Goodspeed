@@ -19,7 +19,7 @@ root**, and the API uses a Supabase (Postgres + pgvector) database.
 
 Install these before you begin:
 
-- **Node.js ≥ 18** (Node 20 LTS recommended) — check with `node -v`
+- **Node.js 22 or 24 (LTS recommended — Node 18 reached end-of-life April 2025) — check with `node -v`
 - **npm ≥ 9** — bundled with Node; check with `npm -v`
 - **Git** — to clone the repository
 - **A Supabase project** — free tier is fine. Create one at
@@ -116,25 +116,21 @@ will exist in your project with Row-Level Security enabled.
 
 ## 6. Configure the AI provider (optional)
 
-Provider **behaviour** (which provider, base URL, model, chunking) is set in
-`apps/api/ai.config.json`, which is committed with sensible OpenAI defaults:
+With the dev server running, open the app and go to the **Settings page**
+(linked from the dashboard header). Select your provider, enter your model,
+and click Save. Changes take effect on the next request — no restart needed.
 
-```json
-{
-  "chat":      { "provider": "openai", "baseUrl": "https://api.openai.com/v1", "model": "gpt-5.4-mini" },
-  "embedding": { "provider": "openai", "baseUrl": "https://api.openai.com/v1", "model": "text-embedding-3-small" },
-  "chunking":  { "targetTokens": 100, "overlapFraction": 0.12 }
-}
-```
-
-- Edit this file (or the in-app **Settings** page) to change provider, model, or
-  chunking. Changes take effect on the **next request — no restart needed**.
-- The matching **API key** for the selected provider must be set in `.env`
-  (e.g. `OPENAI_API_KEY`). Changing a key **does** require a restart.
+The project ships with OpenAI as the default provider. The only prerequisite
+is that the matching API key is present in `.env` (e.g. `OPENAI_API_KEY`).
+Adding or changing a key requires a restart — everything else is configurable
+live from the Settings page.
 
 > If you change the **embedding model** to one with a different vector
 > dimension than the current `1536`, you will need a new migration — the
 > `chunks.embedding` column dimension is fixed at the schema level.
+
+For all supported providers and manual configuration options, see
+[HOW_TO_SWAP_AI_PROVIDERS.md](./HOW_TO_SWAP_AI_PROVIDERS.md).
 
 ---
 
