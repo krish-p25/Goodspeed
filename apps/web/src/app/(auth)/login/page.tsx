@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
 import { signIn } from './actions'
-import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -62,9 +62,9 @@ export default async function LoginPage({
                 required
               />
             </div>
-            <Button type="submit" className="mt-1 w-full">
+            <SubmitButton className="mt-1 w-full" pendingText="Signing in…">
               Sign in
-            </Button>
+            </SubmitButton>
           </form>
         </div>
 
